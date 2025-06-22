@@ -1,6 +1,30 @@
-def main():
-    print("Hello from project-agent!")
+from agno.agent import Agent
+from agno.models.google import Gemini
+from agno.tools.yfinance import YFinanceTools
+from dotenv import load_dotenv
+load_dotenv()
 
 
-if __name__ == "__main__":
-    main()
+
+# agent = Agent(
+#     model=Gemini(id="gemini-2.5-flash", search=True),
+#     show_tool_calls=True,
+#     markdown=True,
+# )
+
+# agent.print_response("What's happening in India?")
+
+
+
+
+
+agent = Agent(
+    model=Gemini(id="gemini-2.5-flash"),
+    tools=[YFinanceTools(stock_price=True, analyst_recommendations=True, company_info=True, company_news=True)],
+    instructions="Use tables to display data.",
+    show_tool_calls=True,
+    markdown=True,
+    # reasoning_model=Gemini(id="gemini-2.5-flash"),
+
+)
+agent.print_response("what is best the best stock to invest in indian market", stream=True)
