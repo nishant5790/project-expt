@@ -27,4 +27,4 @@ agent = Agent(
     # reasoning_model=Gemini(id="gemini-2.5-flash"),
 
 )
-agent.print_response("what is best the best stock to invest in indian market", stream=True)
+agent.print_response("list down 5 stokes in indian market", stream=True)
