@@ -1,0 +1,153 @@
+name: "research-assistant"
+description: "An AI research assistant with custom tools"
+version: "1.0.0"
+
+# LLM Configuration
+llm_provider: "openai"
+model: "gpt-4"
+api_key_env: "OPENAI_API_KEY"
+temperature: 0.5
+max_tokens: 2000
+
+# Workflow Configuration
+workflow_type: "conditional"
+
+# Built-in and Custom Tools
+tools:
+  - "web_search"
+  - "calculator"
+  # Custom tool with inline code
+  - name: "weather_api"
+    description: "Get current weather for a location"
+    function_code: |
+      def get_weather(location: str) -> str:
+          """Get weather information for a location."""
+          import requests
+          
+          # Mock weather API call
+          # In production, replace with actual weather API
+          return f"The weather in {location} is sunny with 72°F"
+    parameters_schema:
+      location:
+        type: "string"
+        description: "The location to get weather for"
+  
+  # Custom tool from file
+  - name: "data_analyzer"
+    description: "Analyze CSV data"
+    module_path: "./custom_tools/data_analyzer.py"
+    function_name: "analyze_csv_data"
+    parameters_schema:
+      file_path:
+        type: "string"
+        description: "Path to the CSV file"
+      analysis_type:
+        type: "string"
+        description: "Type of analysis: 'summary', 'trends', 'correlations'"
+        default: "summary"
+
+# Nodes Definition
+nodes:
+  - name: "classify_request"
+    type: "llm"
+    description: "Classify the type of research request"
+    prompt: |
+      You are a research assistant. Classify the user's request into one of these categories:
+      - "web_search": Needs web search for current information
+      - "calculation": Needs mathematical calculations
+      - "weather": Needs weather information
+      - "data_analysis": Needs data analysis
+      - "general": General knowledge question
+      
+      Respond with only the category name.
+    
+  - name: "route_request" 
+    type: "conditional"
+    description: "Route to appropriate handler"
+    condition: "state['output'].strip().lower()"
+    branches:
+      "web_search": "search_web"
+      "calculation": "do_calculation"
+      "weather": "get_weather_info"
+      "data_analysis": "analyze_data"
+      "default": "general_response"
+  
+  - name: "search_web"
+    type: "tool"
+    description: "Search the web for information"
+    tool: "web_search"
+    
+  - name: "do_calculation"
+    type: "tool"
+    description: "Perform calculations"
+    tool: "calculator"
+    tool_config:
+      expression: "$input"
+      
+  - name: "get_weather_info"
+    type: "tool"
+    description: "Get weather information"
+    tool: "weather_api"
+    tool_config:
+      location: "$input"
+      
+  - name: "analyze_data"
+    type: "tool"
+    description: "Analyze data"
+    tool: "data_analyzer"
+    tool_config:
+      file_path: "$input"
+      analysis_type: "summary"
+      
+  - name: "general_response"
+    type: "llm"
+    description: "Provide general response"
+    prompt: "Provide a helpful response based on your general knowledge."
+    
+  - name: "format_response"
+    type: "llm"
+    description: "Format the final response"
+    prompt: |
+      Based on the previous results and analysis, format a comprehensive and helpful response for the user.
+      Make sure to:
+      1. Directly answer their question
+      2. Provide relevant details
+      3. Suggest follow-up actions if appropriate
+
+# Custom Edges (for conditional workflow)
+edges:
+  - source: "classify_request"
+    target: "route_request"
+  - source: "search_web"
+    target: "format_response"
+  - source: "do_calculation"
+    target: "format_response"
+  - source: "get_weather_info"
+    target: "format_response"
+  - source: "analyze_data"
+    target: "format_response"
+  - source: "general_response"
+    target: "format_response"
+
+# Entry point
+entry_point: "classify_request"
+
+# Runtime Configuration
+timeout: 600
+max_iterations: 15
+streaming: true
+
+# Observability
+enable_logging: true
+enable_metrics: true
+enable_tracing: true
+
+# Additional Metadata
+metadata:
+  author: "Your Name"
+  created_at: "2024-01-15"
+  use_case: "research_assistance"
+  tags:
+    - "research"
+    - "tools"
+    - "conditional" 

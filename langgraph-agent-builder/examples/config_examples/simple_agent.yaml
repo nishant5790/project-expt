@@ -1,0 +1,38 @@
+name: "simple-assistant"
+description: "A simple AI assistant that answers questions"
+version: "1.0.0"
+
+# LLM Configuration
+llm_provider: "openai"
+model: "gpt-3.5-turbo"
+api_key_env: "OPENAI_API_KEY"
+temperature: 0.7
+max_tokens: 1000
+
+# Workflow Configuration
+workflow_type: "sequential"
+
+# Tools (optional)
+tools: []
+
+# Nodes Definition
+nodes:
+  - name: "understand"
+    type: "llm"
+    description: "Understand the user's question"
+    prompt: "You are a helpful assistant. Carefully analyze the user's question and understand what they are asking for."
+    
+  - name: "respond"
+    type: "llm" 
+    description: "Generate a helpful response"
+    prompt: "Based on your understanding, provide a clear, helpful, and accurate response to the user's question."
+
+# Runtime Configuration
+timeout: 300
+max_iterations: 10
+streaming: true
+
+# Observability
+enable_logging: true
+enable_metrics: true
+enable_tracing: true 
